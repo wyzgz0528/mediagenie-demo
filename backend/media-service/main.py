@@ -6,6 +6,14 @@ MediaGenie Backend - 测试版本
 
 import os
 import sys
+#!/usr/bin/env python3
+"""
+MediaGenie Backend - 测试版本
+最简化的FastAPI应用，用于验证部署环境
+"""
+
+import os
+import sys
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,14 +72,10 @@ async def test_endpoint():
 
 if __name__ == "__main__":
     import uvicorn
-    
-    # 读取端口配置
     port = int(os.getenv("WEBSITES_PORT", os.getenv("PORT", "8000")))
-    
     print(f"🚀 Starting MediaGenie Test Backend on port {port}")
     print(f"🐍 Python version: {sys.version}")
     print(f"📁 Working directory: {os.getcwd()}")
-    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
