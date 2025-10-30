@@ -1,0 +1,50 @@
+{
+  "name": "mediagenie",
+  "version": "1.0.0",
+  "description": "MediaGenie - 多媒体内容智能管理平台",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:media-service\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:media-service": "cd backend/media-service && py -m uvicorn main:app --reload --port 9001",
+    "build": "cd frontend && npm run build",
+    "install:all": "npm install && npm run install:frontend && npm run install:media-service",
+    "install:frontend": "cd frontend && npm install",
+    "install:media-service": "cd backend/media-service && pip install -r requirements.txt",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "start": "npm run dev"
+  },
+  "keywords": [
+    "saas",
+    "multimedia",
+    "ai",
+    "speech-to-text",
+    "text-to-speech",
+    "image-analysis",
+    "azure",
+    "marketplace"
+  ],
+  "author": "MediaGenie Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/MediaGenie.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/MediaGenie/issues"
+  },
+  "homepage": "https://mediagenie.com",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^16.0.3"
+  }
+}

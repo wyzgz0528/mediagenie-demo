@@ -1,0 +1,133 @@
+name: Deploy MediaGenie to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: mediagenie-demo-gzdvb5cbeceybwh4
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  NODE_VERSION: '18.x'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Install backend dependencies
+      run: |
+        cd backend/media-service
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install marketplace dependencies
+      run: |
+        cd marketplace-portal
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Create deployment structure
+      run: |
+        # Create deployment directory
+        mkdir -p deployment
+
+        # Copy backend
+        cp -r backend/media-service/* deployment/
+
+        # Copy marketplace portal
+        mkdir -p deployment/marketplace-portal
+        cp -r marketplace-portal/* deployment/marketplace-portal/
+
+        # Copy frontend build
+        mkdir -p deployment/static
+        cp -r frontend/build/* deployment/static/
+
+        # Copy configuration files
+        cp nginx-demo.conf deployment/
+        cp supervisord-demo.conf deployment/
+
+        # Copy requirements
+        cp requirements.txt deployment/
+
+        # Create startup script
+        cat > deployment/startup.sh << 'EOF'
+        #!/bin/bash
+        echo "Starting MediaGenie application..."
+
+        # Install dependencies if needed
+        pip install -r requirements.txt
+
+        # Start supervisord
+        supervisord -c supervisord-demo.conf
+        EOF
+
+        chmod +x deployment/startup.sh
+
+    - name: Create web.config for IIS (if needed)
+      run: |
+        cat > deployment/web.config << 'EOF'
+        <?xml version="1.0" encoding="utf-8"?>
+        <configuration>
+          <system.webServer>
+            <handlers>
+              <add name="PythonHandler" path="*" verb="*" modules="httpPlatformHandler" resourceType="Unspecified" />
+            </handlers>
+            <httpPlatform>
+              <config />
+              <processPath>startup.sh</processPath>
+              <arguments></arguments>
+              <startupTimeLimit>120</startupTimeLimit>
+            </httpPlatform>
+          </system.webServer>
+        </configuration>
+        EOF
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: deployment/
+
+    - name: Azure logout
+      run: |
+        az logout
+      if: always()

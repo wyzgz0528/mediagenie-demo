@@ -1,0 +1,353 @@
+{
+  "monitoring": {
+    "applicationInsights": {
+      "enabled": true,
+      "instrumentationKey": "${APPINSIGHTS_INSTRUMENTATIONKEY}",
+      "connectionString": "${APPLICATIONINSIGHTS_CONNECTION_STRING}",
+      "sampling": {
+        "enabled": true,
+        "percentage": 10,
+        "excludedTypes": ["Request", "Dependency", "Exception"]
+      },
+      "telemetry": {
+        "requests": true,
+        "dependencies": true,
+        "exceptions": true,
+        "traces": true,
+        "metrics": true,
+        "events": true
+      }
+    },
+    
+    "logAnalytics": {
+      "enabled": true,
+      "workspaceId": "${LOG_ANALYTICS_WORKSPACE_ID}",
+      "workspaceKey": "${LOG_ANALYTICS_WORKSPACE_KEY}",
+      "retentionDays": 90
+    },
+    
+    "metrics": {
+      "custom": [
+        {
+          "name": "speech_to_text_requests",
+          "description": "Number of speech-to-text requests",
+          "unit": "Count",
+          "aggregation": "Sum"
+        },
+        {
+          "name": "text_to_speech_requests",
+          "description": "Number of text-to-speech requests",
+          "unit": "Count",
+          "aggregation": "Sum"
+        },
+        {
+          "name": "image_analysis_requests",
+          "description": "Number of image analysis requests",
+          "unit": "Count",
+          "aggregation": "Sum"
+        },
+        {
+          "name": "gpt_chat_requests",
+          "description": "Number of GPT chat requests",
+          "unit": "Count",
+          "aggregation": "Sum"
+        },
+        {
+          "name": "processing_time",
+          "description": "AI service processing time",
+          "unit": "Milliseconds",
+          "aggregation": "Average"
+        },
+        {
+          "name": "error_rate",
+          "description": "Error rate percentage",
+          "unit": "Percent",
+          "aggregation": "Average"
+        },
+        {
+          "name": "active_users",
+          "description": "Number of active users",
+          "unit": "Count",
+          "aggregation": "Sum"
+        },
+        {
+          "name": "subscription_usage",
+          "description": "Subscription usage percentage",
+          "unit": "Percent",
+          "aggregation": "Average"
+        }
+      ]
+    },
+    
+    "alerts": [
+      {
+        "name": "High Error Rate",
+        "description": "Alert when error rate exceeds 5%",
+        "condition": {
+          "metric": "error_rate",
+          "operator": "GreaterThan",
+          "threshold": 5,
+          "timeWindow": "PT5M"
+        },
+        "severity": "Critical",
+        "actions": [
+          {
+            "type": "email",
+            "recipients": ["admin@mediagenie.com", "devops@mediagenie.com"]
+          },
+          {
+            "type": "webhook",
+            "url": "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+          }
+        ]
+      },
+      {
+        "name": "High Response Time",
+        "description": "Alert when average response time exceeds 5 seconds",
+        "condition": {
+          "metric": "processing_time",
+          "operator": "GreaterThan",
+          "threshold": 5000,
+          "timeWindow": "PT10M"
+        },
+        "severity": "Warning",
+        "actions": [
+          {
+            "type": "email",
+            "recipients": ["devops@mediagenie.com"]
+          }
+        ]
+      },
+      {
+        "name": "Service Unavailable",
+        "description": "Alert when service availability drops below 99%",
+        "condition": {
+          "metric": "availability",
+          "operator": "LessThan",
+          "threshold": 99,
+          "timeWindow": "PT15M"
+        },
+        "severity": "Critical",
+        "actions": [
+          {
+            "type": "email",
+            "recipients": ["admin@mediagenie.com", "devops@mediagenie.com"]
+          },
+          {
+            "type": "sms",
+            "recipients": ["+1234567890"]
+          }
+        ]
+      },
+      {
+        "name": "Subscription Limit Exceeded",
+        "description": "Alert when user exceeds 90% of subscription limit",
+        "condition": {
+          "metric": "subscription_usage",
+          "operator": "GreaterThan",
+          "threshold": 90,
+          "timeWindow": "PT1H"
+        },
+        "severity": "Information",
+        "actions": [
+          {
+            "type": "email",
+            "recipients": ["billing@mediagenie.com"]
+          }
+        ]
+      }
+    ],
+    
+    "dashboards": [
+      {
+        "name": "MediaGenie Overview",
+        "description": "Main dashboard showing key metrics",
+        "widgets": [
+          {
+            "type": "metric",
+            "title": "Total Requests",
+            "query": "requests | summarize count() by bin(timestamp, 1h)",
+            "visualization": "timechart"
+          },
+          {
+            "type": "metric",
+            "title": "Error Rate",
+            "query": "requests | summarize error_rate = (countif(success == false) * 100.0) / count() by bin(timestamp, 1h)",
+            "visualization": "timechart"
+          },
+          {
+            "type": "metric",
+            "title": "Active Users",
+            "query": "requests | summarize dcount(user_id) by bin(timestamp, 1h)",
+            "visualization": "timechart"
+          },
+          {
+            "type": "metric",
+            "title": "Service Usage Distribution",
+            "query": "requests | summarize count() by service_type",
+            "visualization": "piechart"
+          }
+        ]
+      },
+      {
+        "name": "Performance Metrics",
+        "description": "Performance and latency metrics",
+        "widgets": [
+          {
+            "type": "metric",
+            "title": "Average Response Time",
+            "query": "requests | summarize avg(duration) by bin(timestamp, 1h)",
+            "visualization": "timechart"
+          },
+          {
+            "type": "metric",
+            "title": "95th Percentile Response Time",
+            "query": "requests | summarize percentile(duration, 95) by bin(timestamp, 1h)",
+            "visualization": "timechart"
+          },
+          {
+            "type": "metric",
+            "title": "Throughput",
+            "query": "requests | summarize count() by bin(timestamp, 1m)",
+            "visualization": "timechart"
+          }
+        ]
+      },
+      {
+        "name": "Business Metrics",
+        "description": "Business and usage metrics",
+        "widgets": [
+          {
+            "type": "metric",
+            "title": "Revenue by Plan",
+            "query": "billing | summarize sum(amount) by subscription_plan",
+            "visualization": "barchart"
+          },
+          {
+            "type": "metric",
+            "title": "User Growth",
+            "query": "users | summarize dcount(user_id) by bin(created_at, 1d)",
+            "visualization": "timechart"
+          },
+          {
+            "type": "metric",
+            "title": "Feature Usage",
+            "query": "usage | summarize count() by feature_name",
+            "visualization": "piechart"
+          }
+        ]
+      }
+    ],
+    
+    "logging": {
+      "levels": {
+        "development": "DEBUG",
+        "staging": "INFO",
+        "production": "WARNING"
+      },
+      "structured": true,
+      "format": "json",
+      "fields": [
+        "timestamp",
+        "level",
+        "message",
+        "service",
+        "user_id",
+        "request_id",
+        "correlation_id",
+        "duration",
+        "status_code",
+        "error_details"
+      ],
+      "retention": {
+        "days": 90,
+        "archiveAfterDays": 30
+      }
+    },
+    
+    "healthChecks": [
+      {
+        "name": "Database Connection",
+        "endpoint": "/health/database",
+        "interval": "PT1M",
+        "timeout": "PT30S",
+        "retries": 3
+      },
+      {
+        "name": "Azure Speech Service",
+        "endpoint": "/health/speech",
+        "interval": "PT5M",
+        "timeout": "PT30S",
+        "retries": 2
+      },
+      {
+        "name": "Azure Vision Service",
+        "endpoint": "/health/vision",
+        "interval": "PT5M",
+        "timeout": "PT30S",
+        "retries": 2
+      },
+      {
+        "name": "Azure OpenAI Service",
+        "endpoint": "/health/openai",
+        "interval": "PT5M",
+        "timeout": "PT30S",
+        "retries": 2
+      },
+      {
+        "name": "Storage Service",
+        "endpoint": "/health/storage",
+        "interval": "PT5M",
+        "timeout": "PT30S",
+        "retries": 2
+      }
+    ],
+    
+    "performance": {
+      "apm": {
+        "enabled": true,
+        "sampleRate": 0.1,
+        "captureBody": "errors",
+        "captureHeaders": true,
+        "stackTraceLimit": 50
+      },
+      "profiling": {
+        "enabled": true,
+        "cpuProfiling": true,
+        "memoryProfiling": true,
+        "duration": "PT1M",
+        "interval": "PT1H"
+      }
+    },
+    
+    "security": {
+      "auditLogs": {
+        "enabled": true,
+        "events": [
+          "user_login",
+          "user_logout",
+          "permission_change",
+          "data_access",
+          "configuration_change",
+          "security_event"
+        ],
+        "retention": 2555
+      },
+      "threatDetection": {
+        "enabled": true,
+        "rules": [
+          {
+            "name": "Brute Force Attack",
+            "condition": "failed_logins > 10 in 5 minutes",
+            "action": "block_ip"
+          },
+          {
+            "name": "Unusual Data Access",
+            "condition": "data_access_volume > 1000% of normal",
+            "action": "alert"
+          }
+        ]
+      }
+    }
+  }
+}

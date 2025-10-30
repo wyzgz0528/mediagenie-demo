@@ -1,0 +1,234 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "appNamePrefix": {
+      "type": "string",
+      "defaultValue": "mediagenie",
+      "metadata": {
+        "description": "应用名称前缀"
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "资源部署位置"
+      }
+    },
+    "appServicePlanSku": {
+      "type": "string",
+      "defaultValue": "B1",
+      "allowedValues": [
+        "F1",
+        "B1",
+        "B2",
+        "S1",
+        "S2"
+      ],
+      "metadata": {
+        "description": "App Service Plan SKU"
+      }
+    },
+    "azureOpenAIEndpoint": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure OpenAI Endpoint"
+      }
+    },
+    "azureOpenAIKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure OpenAI API Key"
+      }
+    },
+    "azureSpeechKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure Speech Service Key"
+      }
+    },
+    "azureSpeechRegion": {
+      "type": "string",
+      "defaultValue": "eastus",
+      "metadata": {
+        "description": "Azure Speech Service Region"
+      }
+    },
+    "azureComputerVisionEndpoint": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure Computer Vision Endpoint"
+      }
+    },
+    "azureComputerVisionKey": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure Computer Vision Key"
+      }
+    }
+  },
+  "variables": {
+    "uniqueSuffix": "[uniqueString(resourceGroup().id)]",
+    "appServicePlanName": "[concat(parameters('appNamePrefix'), '-plan-', variables('uniqueSuffix'))]",
+    "marketplaceAppName": "[concat(parameters('appNamePrefix'), '-marketplace-', variables('uniqueSuffix'))]",
+    "backendAppName": "[concat(parameters('appNamePrefix'), '-backend-', variables('uniqueSuffix'))]",
+    "frontendStorageAccountName": "[concat(replace(parameters('appNamePrefix'), '-', ''), 'fe', variables('uniqueSuffix'))]",
+    "marketplaceUrl": "[concat('https://', variables('marketplaceAppName'), '.azurewebsites.net')]",
+    "backendUrl": "[concat('https://', variables('backendAppName'), '.azurewebsites.net')]",
+    "frontendUrl": "[concat('https://', variables('frontendStorageAccountName'), '.z1.web.core.windows.net')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('appServicePlanSku')]"
+      },
+      "kind": "linux",
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('marketplaceAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      ],
+      "kind": "app,linux",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "PYTHON|3.11",
+          "appCommandLine": "gunicorn --bind=0.0.0.0:8000 --timeout=600 app:app",
+          "appSettings": [
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "BACKEND_URL",
+              "value": "[variables('backendUrl')]"
+            },
+            {
+              "name": "FRONTEND_URL",
+              "value": "[variables('frontendUrl')]"
+            },
+            {
+              "name": "WEBSITES_PORT",
+              "value": "8000"
+            }
+          ]
+        },
+        "httpsOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('backendAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      ],
+      "kind": "app,linux",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "PYTHON|3.11",
+          "appCommandLine": "python -m uvicorn main:app --host 0.0.0.0 --port 8000",
+          "appSettings": [
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "AZURE_OPENAI_ENDPOINT",
+              "value": "[parameters('azureOpenAIEndpoint')]"
+            },
+            {
+              "name": "AZURE_OPENAI_KEY",
+              "value": "[parameters('azureOpenAIKey')]"
+            },
+            {
+              "name": "AZURE_SPEECH_KEY",
+              "value": "[parameters('azureSpeechKey')]"
+            },
+            {
+              "name": "AZURE_SPEECH_REGION",
+              "value": "[parameters('azureSpeechRegion')]"
+            },
+            {
+              "name": "AZURE_COMPUTER_VISION_ENDPOINT",
+              "value": "[parameters('azureComputerVisionEndpoint')]"
+            },
+            {
+              "name": "AZURE_COMPUTER_VISION_KEY",
+              "value": "[parameters('azureComputerVisionKey')]"
+            },
+            {
+              "name": "WEBSITES_PORT",
+              "value": "8000"
+            },
+            {
+              "name": "CORS_ORIGINS",
+              "value": "[concat(variables('frontendUrl'), ',', variables('marketplaceUrl'))]"
+            }
+          ]
+        },
+        "httpsOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('frontendStorageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "supportsHttpsTrafficOnly": true,
+        "accessTier": "Hot",
+        "allowBlobPublicAccess": true
+      }
+    }
+  ],
+  "outputs": {
+    "landingPageUrl": {
+      "type": "string",
+      "value": "[variables('marketplaceUrl')]"
+    },
+    "webhookUrl": {
+      "type": "string",
+      "value": "[concat(variables('backendUrl'), '/api/marketplace/webhook')]"
+    },
+    "frontendUrl": {
+      "type": "string",
+      "value": "[variables('frontendUrl')]"
+    },
+    "marketplaceAppName": {
+      "type": "string",
+      "value": "[variables('marketplaceAppName')]"
+    },
+    "backendAppName": {
+      "type": "string",
+      "value": "[variables('backendAppName')]"
+    },
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('frontendStorageAccountName')]"
+    }
+  }
+}

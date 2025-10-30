@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1890ff" />
+    <meta name="description" content="MediaGenie - 多媒体内容智能管理平台，提供语音转写、文本转语音、图像分析等AI服务" />
+    <meta name="keywords" content="语音转写,文本转语音,图像分析,AI,多媒体,内容管理,SaaS" />
+    <meta name="author" content="MediaGenie Team" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mediagenie.com/" />
+    <meta property="og:title" content="MediaGenie - 多媒体内容智能管理平台" />
+    <meta property="og:description" content="专业的多媒体内容智能管理平台，提供语音转写、文本转语音、图像分析等AI服务" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://mediagenie.com/" />
+    <meta property="twitter:title" content="MediaGenie - 多媒体内容智能管理平台" />
+    <meta property="twitter:description" content="专业的多媒体内容智能管理平台，提供语音转写、文本转语音、图像分析等AI服务" />
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.png" />
+    
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- 预加载关键资源 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <title>MediaGenie - 多媒体内容智能管理平台</title>
+    
+    <style>
+      /* 加载动画 */
+      .loading-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #1890ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .loading-text {
+        margin-top: 16px;
+        color: #666;
+        font-size: 14px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      }
+      
+      /* 隐藏加载动画 */
+      .loading-hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>您需要启用JavaScript才能运行此应用程序。</noscript>
+    
+    <!-- 初始加载动画 -->
+    <div id="loading" class="loading-container">
+      <div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在加载 MediaGenie...</div>
+      </div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+      // 隐藏加载动画
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loading = document.getElementById('loading');
+          if (loading) {
+            loading.classList.add('loading-hidden');
+          }
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
