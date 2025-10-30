@@ -1,0 +1,5 @@
+# MediaGenie Backend Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.23.0
+gunicorn>=21.2.0
+python-multipart>=0.0.6
