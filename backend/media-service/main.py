@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 MediaGenie Backend - 测试版本
-最简化的FastAPI应用，用于验证部署环�?"""
+最简化的FastAPI应用，用于验证部署环境
+"""
 
 import os
 import sys
@@ -19,14 +20,15 @@ app = FastAPI(
 # CORS配置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 测试时允许所有来�?    allow_credentials=True,
+    allow_origins=["*"],  # 测试时允许所有来源
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 @app.get("/")
 async def root():
-    """根路�?""
+    """根路径"""
     return {
         "message": "MediaGenie Backend Test API",
         "status": "running",
@@ -36,7 +38,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """健康检查端�?""
+    """健康检查端点"""
     return {
         "status": "healthy",
         "service": "mediagenie-backend-test",
