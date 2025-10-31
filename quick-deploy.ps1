@@ -26,15 +26,34 @@ if (!$account) {
 Write-Host "[OK] Logged in as: $($account.user.name)" -ForegroundColor Green
 Write-Host "  Subscription: $($account.name)" -ForegroundColor Cyan
 
-# Create ACR
-Write-Host "`n[3/6] Creating Azure Container Registry..." -ForegroundColor Yellow
-$acrName = "mediageniecr"
+# Create Resource Group
+Write-Host "`n[3/6] Checking/Creating Resource Group..." -ForegroundColor Yellow
 $resourceGroup = "mediagenie-rg"
 $location = "eastus2"
 
 Write-Host "  Resource Group: $resourceGroup" -ForegroundColor Cyan
-Write-Host "  ACR Name: $acrName" -ForegroundColor Cyan
 Write-Host "  Location: $location" -ForegroundColor Cyan
+
+# Check if resource group exists
+$rgExists = az group show --name $resourceGroup 2>$null
+if ($rgExists) {
+    Write-Host "[OK] Resource group already exists" -ForegroundColor Green
+} else {
+    Write-Host "  Creating resource group..." -ForegroundColor Yellow
+    az group create --name $resourceGroup --location $location --output none
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] Resource group created successfully" -ForegroundColor Green
+    } else {
+        Write-Host "[ERROR] Resource group creation failed" -ForegroundColor Red
+        exit 1
+    }
+}
+
+# Create ACR
+Write-Host "`n[4/6] Creating Azure Container Registry..." -ForegroundColor Yellow
+$acrName = "mediageniecr"
+
+Write-Host "  ACR Name: $acrName" -ForegroundColor Cyan
 
 # Check if ACR already exists
 $acrExists = az acr show --name $acrName --resource-group $resourceGroup 2>$null
@@ -57,7 +76,7 @@ az acr update --name $acrName --admin-enabled true --output none
 Write-Host "[OK] Admin account enabled" -ForegroundColor Green
 
 # Get ACR credentials
-Write-Host "`n[4/6] Getting ACR credentials..." -ForegroundColor Yellow
+Write-Host "`n[5/6] Getting ACR credentials..." -ForegroundColor Yellow
 $acrCreds = az acr credential show --name $acrName | ConvertFrom-Json
 $acrLoginServer = "$acrName.azurecr.io"
 $acrUsername = $acrCreds.username
@@ -68,8 +87,45 @@ Write-Host "  Login Server: $acrLoginServer" -ForegroundColor Cyan
 Write-Host "  Username: $acrUsername" -ForegroundColor Cyan
 Write-Host "  Password: $acrPassword" -ForegroundColor Cyan
 
+# Create Web Apps if they don't exist
+Write-Host "`n[6/7] Checking/Creating Azure Web Apps..." -ForegroundColor Yellow
+
+# Check backend web app
+$backendExists = az webapp show --name mediagenie-backend --resource-group $resourceGroup 2>$null
+if ($backendExists) {
+    Write-Host "[OK] Backend Web App already exists" -ForegroundColor Green
+} else {
+    Write-Host "  Creating backend Web App..." -ForegroundColor Yellow
+    # Create App Service Plan first
+    $planExists = az appservice plan show --name mediagenie-plan --resource-group $resourceGroup 2>$null
+    if (!$planExists) {
+        Write-Host "  Creating App Service Plan..." -ForegroundColor Yellow
+        az appservice plan create --name mediagenie-plan --resource-group $resourceGroup --location $location --sku B1 --is-linux --output none
+    }
+    # Create Web App
+    az webapp create --name mediagenie-backend --resource-group $resourceGroup --plan mediagenie-plan --runtime "PYTHON:3.11" --output none
+    Write-Host "[OK] Backend Web App created" -ForegroundColor Green
+}
+
+# Check frontend web app
+$frontendExists = az webapp show --name mediagenie-frontend --resource-group $resourceGroup 2>$null
+if ($frontendExists) {
+    Write-Host "[OK] Frontend Web App already exists" -ForegroundColor Green
+} else {
+    Write-Host "  Creating frontend Web App..." -ForegroundColor Yellow
+    # Create App Service Plan if not exists
+    $planExists = az appservice plan show --name mediagenie-plan --resource-group $resourceGroup 2>$null
+    if (!$planExists) {
+        Write-Host "  Creating App Service Plan..." -ForegroundColor Yellow
+        az appservice plan create --name mediagenie-plan --resource-group $resourceGroup --location $location --sku B1 --is-linux --output none
+    }
+    # Create Web App
+    az webapp create --name mediagenie-frontend --resource-group $resourceGroup --plan mediagenie-plan --runtime "NODE:18-lts" --output none
+    Write-Host "[OK] Frontend Web App created" -ForegroundColor Green
+}
+
 # Configure Web App
-Write-Host "`n[5/6] Configuring Azure Web App..." -ForegroundColor Yellow
+Write-Host "`n[7/8] Configuring Azure Web Apps for Docker..." -ForegroundColor Yellow
 
 # Backend
 Write-Host "  Configuring backend Web App..." -ForegroundColor Yellow
@@ -110,7 +166,7 @@ az webapp config appsettings set `
 Write-Host "[OK] Frontend configured" -ForegroundColor Green
 
 # Get publish profiles
-Write-Host "`n[6/6] Getting publish profiles..." -ForegroundColor Yellow
+Write-Host "`n[8/8] Getting publish profiles..." -ForegroundColor Yellow
 az webapp deployment list-publishing-profiles `
     --name mediagenie-backend `
     --resource-group $resourceGroup `
