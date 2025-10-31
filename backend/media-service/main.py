@@ -1,3 +1,6 @@
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 #!/usr/bin/env python3
 """
 MediaGenie Backend - 测试版本
@@ -25,6 +28,17 @@ app = FastAPI(
     version="1.0.0-test"
 )
 
+# 挂载前端静态文件到 /static 路径
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+
+# fallback: 除API外的所有路径都返回 index.html（支持前端路由）
+@app.get("/{full_path:path}")
+async def frontend_fallback(full_path: str):
+    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
+    return {"error": "index.html not found"}
+
 # CORS配置
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +50,11 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """根路径"""
+    """根路径 - 返回前端 index.html（前端一体化）"""
+    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
+    # 回退到后端的简单 JSON（如果前端文件缺失）
     return {
         "message": "MediaGenie Backend Test API",
         "status": "running",

@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.qodo
+
+# Node modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+frontend/build
+*.zip
+*.tar.gz
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+*test*.py
+*test*.js
+*test*.ts
+*test*.tsx
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+

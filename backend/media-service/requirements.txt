@@ -1,0 +1,28 @@
+# Web框架
+fastapi>=0.104.0
+uvicorn[standard]>=0.23.0
+gunicorn>=21.2.0
+python-multipart>=0.0.6
+
+# 数据验证
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+
+# HTTP客户端
+requests>=2.31.0
+httpx>=0.25.0
+
+# Azure认知服务 (最小集)
+azure-cognitiveservices-speech>=1.30.0
+azure-storage-blob>=12.0.0
+openai>=1.0.0
+
+# 日期处理
+python-dateutil>=2.8.2
+
+# 数据库
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.9
+
