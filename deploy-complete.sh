@@ -52,7 +52,7 @@ if [ "$choice" = "1" ]; then
     echo ""
     echo "[3/7] Installing system dependencies..."
     sudo apt update
-    sudo apt install -y python3.11 python3.11-venv python3-pip nodejs npm
+    sudo apt install -y python3 python3-venv python3-pip nodejs npm
     
     # Setup backend
     echo ""
@@ -61,7 +61,7 @@ if [ "$choice" = "1" ]; then
     
     # Create virtual environment if not exists
     if [ ! -d "venv" ]; then
-        python3.11 -m venv venv
+        python3 -m venv venv
     fi
     
     source venv/bin/activate
