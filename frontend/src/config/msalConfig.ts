@@ -61,13 +61,23 @@ export const apiRequest = {
   scopes: ['api://your-api-id/.default'], // 替换为你的 API ID
 };
 
-// 创建 MSAL 实例
-export const msalInstance = new PublicClientApplication(msalConfig);
+// 检查是否在 HTTPS 环境或 localhost
+const isSecureContext = window.isSecureContext || window.location.hostname === 'localhost';
+
+// 创建 MSAL 实例（仅在安全上下文中）
+export const msalInstance = isSecureContext
+  ? new PublicClientApplication(msalConfig)
+  : null;
 
 // 初始化 MSAL
 export const initializeMsal = async () => {
+  if (!isSecureContext) {
+    console.warn('⚠️ MSAL 需要 HTTPS 环境，当前为 HTTP，跳过初始化');
+    return;
+  }
+
   try {
-    await msalInstance.initialize();
+    await msalInstance?.initialize();
     console.log('✅ MSAL 初始化成功');
   } catch (error) {
     console.error('❌ MSAL 初始化失败:', error);
@@ -80,9 +90,14 @@ export const initializeMsal = async () => {
  * @returns 访问令牌
  */
 export const getAccessToken = async (scopes: string[] = loginRequest.scopes): Promise<string | null> => {
+  if (!msalInstance) {
+    console.warn('⚠️ MSAL 未初始化（需要 HTTPS 环境）');
+    return null;
+  }
+
   try {
     const account = msalInstance.getActiveAccount();
-    
+
     if (!account) {
       console.warn('⚠️ 没有活跃的账户');
       return null;
@@ -105,6 +120,10 @@ export const getAccessToken = async (scopes: string[] = loginRequest.scopes): Pr
  * @returns 登录响应
  */
 export const loginUser = async () => {
+  if (!msalInstance) {
+    throw new Error('MSAL 未初始化（需要 HTTPS 环境）');
+  }
+
   try {
     const response = await msalInstance.loginPopup(loginRequest);
     console.log('✅ 登录成功:', response);
@@ -119,6 +138,11 @@ export const loginUser = async () => {
  * 退出登录
  */
 export const logoutUser = async () => {
+  if (!msalInstance) {
+    console.warn('⚠️ MSAL 未初始化');
+    return;
+  }
+
   try {
     await msalInstance.logoutPopup();
     console.log('✅ 退出登录成功');
@@ -133,7 +157,7 @@ export const logoutUser = async () => {
  * @returns 当前用户账户
  */
 export const getCurrentAccount = () => {
-  return msalInstance.getActiveAccount();
+  return msalInstance?.getActiveAccount() || null;
 };
 
 /**
@@ -141,6 +165,7 @@ export const getCurrentAccount = () => {
  * @returns 是否已认证
  */
 export const isUserAuthenticated = (): boolean => {
+  if (!msalInstance) return false;
   const account = msalInstance.getActiveAccount();
   return !!account;
 };
