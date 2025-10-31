@@ -69,28 +69,25 @@ echo -e "${GREEN}[OK] Firewall configured${NC}"
 echo -e "\n${YELLOW}[7/10] Creating .env file...${NC}"
 if [ ! -f "$PROJECT_DIR/.env" ]; then
     cat > "$PROJECT_DIR/.env" << 'EOF'
-# Database Configuration
-DATABASE_URL=postgresql+asyncpg://dbadmin:YOUR_DB_PASSWORD@mediagenie-db-5428.postgres.database.azure.com:5432/mediagenie
-
+# MediaGenie Environment Configuration (No Database)
 # Backend Configuration
 ENVIRONMENT=production
 DEBUG=false
-SECRET_KEY=your-secret-key-here
 
 # Frontend Configuration
 REACT_APP_ENV=production
 REACT_APP_MEDIA_SERVICE_URL=http://13.92.133.12:8000
 
-# Azure Services (Optional)
+# Azure Services (Optional - Leave empty if not using)
 AZURE_SPEECH_KEY=
 AZURE_SPEECH_REGION=
 AZURE_STORAGE_CONNECTION_STRING=
 AZURE_OPENAI_KEY=
 AZURE_OPENAI_ENDPOINT=
 EOF
-    echo -e "${GREEN}[OK] .env file created${NC}"
-    echo -e "${YELLOW}[WARNING] Please edit .env file with your actual credentials${NC}"
-    echo "Run: nano $PROJECT_DIR/.env"
+    echo -e "${GREEN}[OK] .env file created (No database required)${NC}"
+    echo -e "${YELLOW}[INFO] This configuration does not require a database${NC}"
+    echo -e "${YELLOW}[INFO] Data will be stored in memory (lost on restart)${NC}"
 else
     echo -e "${GREEN}[OK] .env file already exists${NC}"
 fi
