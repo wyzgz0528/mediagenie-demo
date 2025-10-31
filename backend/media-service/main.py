@@ -1,18 +1,7 @@
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-import os
 #!/usr/bin/env python3
 """
-MediaGenie Backend - 测试版本
-最简化的FastAPI应用，用于验证部署环境
-"""
-
-import os
-import sys
-#!/usr/bin/env python3
-"""
-MediaGenie Backend - 测试版本
-最简化的FastAPI应用，用于验证部署环境
+MediaGenie Backend - API Service
+Simplified FastAPI application for deployment testing
 """
 
 import os
@@ -21,23 +10,12 @@ from datetime import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# 创建FastAPI应用
+# Create FastAPI application
 app = FastAPI(
-    title="MediaGenie Backend - Test",
-    description="MediaGenie 后端服务测试版本",
-    version="1.0.0-test"
+    title="MediaGenie Backend API",
+    description="MediaGenie Backend Service",
+    version="1.0.0"
 )
-
-# 挂载前端静态文件到 /static 路径
-app.mount("/static", StaticFiles(directory="static", html=True), name="static")
-
-# fallback: 除API外的所有路径都返回 index.html（支持前端路由）
-@app.get("/{full_path:path}")
-async def frontend_fallback(full_path: str):
-    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path, media_type="text/html")
-    return {"error": "index.html not found"}
 
 # CORS配置
 app.add_middleware(
@@ -50,38 +28,27 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """根路径 - 返回前端 index.html（前端一体化）"""
-    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
-    if os.path.exists(index_path):
-        return FileResponse(index_path, media_type="text/html")
-    # 回退到后端的简单 JSON（如果前端文件缺失）
+    """Root endpoint"""
     return {
-        "message": "MediaGenie Backend Test API",
+        "message": "MediaGenie Backend API",
         "status": "running",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0-test"
+        "version": "1.0.0"
     }
 
 @app.get("/health")
 async def health_check():
-    """健康检查端点"""
+    """Health check endpoint"""
     return {
         "status": "healthy",
-        "service": "mediagenie-backend-test",
+        "service": "mediagenie-backend",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0-test",
-        "python_version": sys.version,
-        "environment": {
-            "PORT": os.getenv("PORT", "8000"),
-            "WEBSITES_PORT": os.getenv("WEBSITES_PORT", "Not set"),
-            "PYTHONPATH": os.getenv("PYTHONPATH", "Not set"),
-            "PWD": os.getcwd()
-        }
+        "version": "1.0.0"
     }
 
-@app.get("/test")
+@app.get("/api/test")
 async def test_endpoint():
-    """测试端点"""
+    """Test endpoint"""
     return {
         "message": "Test endpoint working!",
         "timestamp": datetime.utcnow().isoformat(),
